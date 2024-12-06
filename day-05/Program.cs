@@ -1,4 +1,4 @@
-﻿var sr = new StreamReader("input-05.txt");
+﻿var sr = new StreamReader("sample-05.txt");
 
 var rules = new Dictionary<int, List<int>>();
 var updates = new List<List<int>>();
@@ -67,8 +67,10 @@ class PageComparer : IComparer<int>
 
 	public int Compare(int page1, int page2)
 	{
-		if (Rules[page1].Contains(page2))
+		if (Rules.TryGetValue(page1, out var lowerThanOne) && lowerThanOne.Contains(page2))
 			return 1;
-		return -1;
+		if (Rules.TryGetValue(page2, out var lowerThanTwo) && lowerThanTwo.Contains(page1))
+			return -1;
+		return 0;
 	}
 }
