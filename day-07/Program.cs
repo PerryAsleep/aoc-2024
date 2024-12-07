@@ -4,6 +4,7 @@ var results =  new List<long>();
 var valueLists = new List<List<int>>();
 
 var line = sr.ReadLine();
+var maxNumValues = 0;
 while (line != null)
 {
 	var parts = line.Split(':');
@@ -13,10 +14,15 @@ while (line != null)
 	var valuesStr = parts[1].Trim().Split(' ');
 	foreach (var v in valuesStr)
 		values.Add(int.Parse(v));
+	maxNumValues = Math.Max(maxNumValues, valuesStr.Length - 1);
 	valueLists.Add(values);
 
 	line = sr.ReadLine();
 }
+
+var cachedOperators = new Dictionary<int, List<Operator[]>>();
+for (var i = 0; i <= maxNumValues; i++)
+	cachedOperators.Add(i, Helpers.Combinations.CreateCombinations<Operator>(i));
 
 // Part 1 / 2.
 var result = 0L;
@@ -29,7 +35,7 @@ Console.WriteLine(result);
 
 bool ParseEquation(long result, List<int> values)
 {
-	var operatorCombinations = Helpers.Combinations.CreateCombinations<Operator>(values.Count - 1);
+	var operatorCombinations = cachedOperators[values.Count - 1];
 	foreach (var operatorSequence in operatorCombinations)
 	{
 		if (ParseEquationWithOperators(result, values, operatorSequence))
@@ -59,6 +65,8 @@ bool ParseEquationWithOperators(long result, List<int> values, Operator[] operat
 				r = values[operatorIndex + 1] + r * (long)Math.Pow(10, digits);
 				break;
 		}
+		if (r > result)
+			return false;
 		operatorIndex++;
 	}
 	return r == result;
