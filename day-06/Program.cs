@@ -33,11 +33,16 @@ while(guard.Move()) { }
 Console.WriteLine(grid.GetNumVisitedTiles());
 
 // Part 2.
+grid.CommitOriginalPath();
+grid.Reset();
+guard.Reset();
 var numLoops = 0;
 for (var ty = 0; ty < grid.H; ty++)
 {
-	for (var tx = 0; tx < grid.H; tx++)
+	for (var tx = 0; tx < grid.W; tx++)
 	{
+		if (!grid.Tiles[ty][tx].InOriginalPath)
+			continue;
 		grid.Tiles[ty][tx].TemporaryObstacle = true;
 		while (guard.Move() && !guard.InLoop) { }
 		if (guard.InLoop)
@@ -68,6 +73,17 @@ class Grid
 		return numVisitedTiles;
 	}
 
+	public void CommitOriginalPath()
+	{
+		foreach (var row in Tiles)
+		{
+			foreach (var tile in row)
+			{
+				tile.InOriginalPath = tile.Visited != null;
+			}
+		}
+	}
+
 	public void Reset()
 	{
 		foreach (var row in Tiles)
@@ -85,6 +101,7 @@ class Tile
 {
 	public bool Occupied;
 	public Facing? Visited;
+	public bool InOriginalPath;
 	public bool TemporaryObstacle;
 
 	public bool IsOccupied()
@@ -110,8 +127,8 @@ class Guard
 	public int Y;
 
 	private readonly Facing StartingFacing;
-	private readonly int StartingX;
-	private readonly int StartingY;
+	public readonly int StartingX;
+	public readonly int StartingY;
 
 	public Guard(Grid InGrid, Facing InFacing, int InX, int InY)
 	{
