@@ -32,6 +32,7 @@ for (var i = 0; i < valueLists.Count; i++)
 		result += results[i];
 }
 Console.WriteLine(result);
+Console.Read();
 
 bool ParseEquation(long result, List<int> values)
 {
