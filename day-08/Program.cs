@@ -1,7 +1,7 @@
 ﻿var sr = new StreamReader("input-08.txt");
 
 var antennas = new Dictionary<char, List<Tuple<int, int>>>();
-var antinodesPart = new HashSet<Tuple<int, int>>();
+var antinodes = new HashSet<Tuple<int, int>>();
 var line = sr.ReadLine();
 var y = 0;
 var w = 0;
@@ -40,16 +40,16 @@ foreach (var matchingAntennas in antennas)
 			//var x2 = positions[j].Item1 + dx;
 			//var y2 = positions[j].Item2 + dy;
 			//if (InBounds(x1, y1))
-			//	antinodesPart1.Add(new Tuple<int, int>(x1, y1));
+			//	antinodes.Add(new Tuple<int, int>(x1, y1));
 			//if (InBounds(x2, y2))
-			//	antinodesPart1.Add(new Tuple<int, int>(x2, y2));
+			//	antinodes.Add(new Tuple<int, int>(x2, y2));
 
 			// Part 2.
 			var lx = positions[i].Item1;
 			var ly = positions[i].Item2;
 			while (InBounds(lx, ly))
 			{
-				antinodesPart.Add(new Tuple<int, int>(lx, ly));
+				antinodes.Add(new Tuple<int, int>(lx, ly));
 				lx += dx;
 				ly += dy;
 			}
@@ -57,7 +57,7 @@ foreach (var matchingAntennas in antennas)
 			ly = positions[i].Item2 - dy;
 			while (InBounds(lx, ly))
 			{
-				antinodesPart.Add(new Tuple<int, int>(lx, ly));
+				antinodes.Add(new Tuple<int, int>(lx, ly));
 				lx -= dx;
 				ly -= dy;
 			}
@@ -65,7 +65,7 @@ foreach (var matchingAntennas in antennas)
 	}
 }
 
-Console.WriteLine(antinodesPart.Count);
+Console.WriteLine(antinodes.Count);
 
 bool InBounds(int x, int y)
 {
