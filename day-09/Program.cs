@@ -48,9 +48,6 @@ long CompactBufferPartTwo(List<Chunk> freeChunks, List<Chunk> occupiedChunks)
 
 			if (fc.Length >= oc.Length)
 			{
-				var originalStartIndex = oc.Index;
-				var originalEndIndex = originalStartIndex + oc.Length;
-
 				// Move the occupied chunk to the free chunk.
 				oc.Index = fc.Index;
 				
@@ -63,36 +60,6 @@ long CompactBufferPartTwo(List<Chunk> freeChunks, List<Chunk> occupiedChunks)
 				{
 					fc.Index += oc.Length;
 					fc.Length -= oc.Length;
-				}
-
-				// Update the free chunk resulting from moving the occupied chunk.
-				int? precedingFreeChunkIndex = null;
-				int? followingFreeChunkIndex = null;
-				var adjacentFcIndex = 0;
-				while (adjacentFcIndex < freeChunks.Count)
-				{
-					if (freeChunks[adjacentFcIndex].Index + freeChunks[adjacentFcIndex].Length == originalStartIndex)
-						precedingFreeChunkIndex = adjacentFcIndex;
-					if (freeChunks[adjacentFcIndex].Index == originalEndIndex)
-						followingFreeChunkIndex = adjacentFcIndex;
-					if (precedingFreeChunkIndex != null && followingFreeChunkIndex != null)
-						break;
-					adjacentFcIndex++;
-				}
-				if (precedingFreeChunkIndex != null && followingFreeChunkIndex != null)
-				{
-					freeChunks[(int)precedingFreeChunkIndex].Length =
-						freeChunks[(int)followingFreeChunkIndex].Index + freeChunks[(int)followingFreeChunkIndex].Length - freeChunks[(int)precedingFreeChunkIndex].Index;
-					freeChunks.RemoveAt((int)followingFreeChunkIndex);
-				}
-				else if (precedingFreeChunkIndex != null)
-				{
-					freeChunks[(int)precedingFreeChunkIndex].Length += oc.Length;
-				}
-				else if (followingFreeChunkIndex != null)
-				{
-					freeChunks[(int)followingFreeChunkIndex].Index -= oc.Length;
-					freeChunks[(int)followingFreeChunkIndex].Length += oc.Length;
 				}
 
 				break;
