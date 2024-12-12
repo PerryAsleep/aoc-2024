@@ -107,117 +107,77 @@ class Region
 	{
 		public int X;
 		public int Y;
-		public Dir OutsideDir;
 		public int Length;
-	}
-
-	private Tuple<int, int> GetEdgeCoord(int gridX, int gridY, Dir outsideDir)
-	{
-		switch (outsideDir)
-		{
-			case Dir.L:
-				return new(gridX * 2, gridY * 2 + 1);
-			case Dir.D:
-				return new((gridX * 2) + 1, (gridY + 1) * 2);
-			case Dir.U:
-				return new((gridX * 2) + 1, gridY * 2);
-			case Dir.R:
-				return new((gridX + 1) * 2, gridY * 2 + 1);
-		}
-		return null;
 	}
 
 	public void AddEdge(int x, int y, Dir outsideDir)
 	{
-		var ec = GetEdgeCoord(x, y, outsideDir);
 		Edge edge = null;
 
 		// Check left.
-		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int>(ec.Item1 - 2, ec.Item2), out var l))
+		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int, Dir>(x - 1, y, outsideDir), out var l))
 		{
-			if (l.OutsideDir != outsideDir)
-			{
-				l = null;
-			}
-
 			// Extend left edge.
-			else
-			{
-				l.Length++;
-				edge = l;
-			}
+			l.Length++;
+			edge = l;
 		}
 
 		// Check right.
-		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int>(ec.Item1 + 2, ec.Item2), out var r))
+		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int, Dir>(x + 1, y, outsideDir), out var r))
 		{
-			if (r.OutsideDir == outsideDir)
+			// Join left and right edge.
+			if (l != null)
 			{
-				// Join left and right edge.
-				if (l != null)
-				{
-					// Remove right edge.
-					Edges.Remove(r);
-					// Extend left edge.
-					l.Length += (r.Length + 1);
-					// Update right edge coords to point to new extended edge.
-					for (var rx = r.X; rx < r.X + r.Length * 2; rx+=2)
-						OccupiedEdgeCoords[new Tuple<int, int>(rx, r.Y)] = l;
-				}
-
-				// Extend right edge.
-				else
-				{
-					r.X-=2;
-					r.Length++;
-				}
-
-				edge = r;
+				// Remove right edge.
+				Edges.Remove(r);
+				// Extend left edge.
+				l.Length += (r.Length + 1);
+				// Update right edge coords to point to new extended edge.
+				for (var rx = r.X; rx < r.X + r.Length; rx++)
+					OccupiedEdgeCoords[new Tuple<int, int, Dir>(rx, r.Y, outsideDir)] = l;
 			}
+
+			// Extend right edge.
+			else
+			{
+				r.X--;
+				r.Length++;
+			}
+
+			edge = r;
 		}
 
 		// Check up.
-		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int>(ec.Item1, ec.Item2 - 2), out var u))
+		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int, Dir>(x, y - 1, outsideDir), out var u))
 		{
-			if (u.OutsideDir != outsideDir)
-			{
-				u = null;
-			}
-
 			// Extend up edge.
-			else
-			{
-				u.Length++;
-				edge = u;
-			}
+			u.Length++;
+			edge = u;
 		}
 
 		// Check down.
-		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int>(ec.Item1, ec.Item2 + 2), out var d))
+		if (OccupiedEdgeCoords.TryGetValue(new Tuple<int, int, Dir>(x, y + 1, outsideDir), out var d))
 		{
-			if (d.OutsideDir == outsideDir)
+			// Join up and down edge.
+			if (u != null)
 			{
-				// Join up and down edge.
-				if (u != null)
-				{
-					// Remove down edge.
-					Edges.Remove(d);
-					// Extend up edge.
-					u.Length += (d.Length + 1);
-					// Update down edge coords to point to new extended edge.
-					for (var dy = d.Y; dy < d.Y + d.Length * 2; dy+=2)
-						OccupiedEdgeCoords[new Tuple<int, int>(d.X, dy)] = u;
-				}
-
-				// Extend down edge.
-				else
-				{
-					d.Y-=2;
-					d.Length++;
-				}
-
-				edge = d;
+				// Remove down edge.
+				Edges.Remove(d);
+				// Extend up edge.
+				u.Length += (d.Length + 1);
+				// Update down edge coords to point to new extended edge.
+				for (var dy = d.Y; dy < d.Y + d.Length; dy++)
+					OccupiedEdgeCoords[new Tuple<int, int, Dir>(d.X, dy, outsideDir)] = u;
 			}
+
+			// Extend down edge.
+			else
+			{
+				d.Y--;
+				d.Length++;
+			}
+
+			edge = d;
 		}
 
 		// No adjacent edges. Add new edge.
@@ -225,16 +185,15 @@ class Region
 		{
 			edge = new Edge()
 			{
-				X = ec.Item1,
-				Y = ec.Item2,
+				X = x,
+				Y = y,
 				Length = 1,
-				OutsideDir = outsideDir,
 			};
 			Edges.Add(edge);
 		}
 
 		// Record position of this edge.
-		OccupiedEdgeCoords.Add(ec, edge);
+		OccupiedEdgeCoords.Add(new Tuple<int, int, Dir>(x, y, outsideDir), edge);
 	}
 
 	public int GetNumEdges()
@@ -245,6 +204,6 @@ class Region
 	public int Perimeter;
 	public int Area;
 
-	private readonly Dictionary<Tuple<int, int>, Edge> OccupiedEdgeCoords = new();
+	private readonly Dictionary<Tuple<int, int, Dir>, Edge> OccupiedEdgeCoords = new();
 	private readonly HashSet<Edge> Edges = new();
 }
