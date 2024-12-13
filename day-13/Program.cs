@@ -83,7 +83,7 @@ class Game
 
 	private static bool IsWhole(double d)
 	{
-		return Math.Abs(d - Math.Truncate(d)) < double.Epsilon;
+		return Math.Abs(d - Math.Truncate(d)) <= double.Epsilon;
 	}
 
 	private long GetCostToWin(long prizeX, long prizeY)
