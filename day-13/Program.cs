@@ -64,69 +64,33 @@ class Game
 
 	public long GetMinCostToWinPart1()
 	{
-		return GetMinCostToWin(PrizeX, PrizeY);
+		return GetCostToWin(PrizeX, PrizeY);
 	}
 
 	public long GetMinCostToWinPart2()
 	{
-		return GetMinCostToWin(PrizeX + 10000000000000, PrizeY + 10000000000000);
+		return GetCostToWin(PrizeX + 10000000000000, PrizeY + 10000000000000);
 	}
 
-	private long GetMinCostToWin(long prizeX, long prizeY)
+	private static (long, long) Intersection(long x1, long y1, long x2, long y2, long x3, long y3, long x4, long y4)
 	{
-		// Binary search bounds.
-		var maxAPressesInX = prizeX / A.X;
-		var maxAPressesInY = prizeY / A.Y;
-		var maxAPresses = Math.Min(maxAPressesInX, maxAPressesInY);
-		var minAPresses = 0L;
-		var curAPresses = maxAPresses / 2;
+		var px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
+		         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+		var py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
+		         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+		return (px, py);
+	}
 
-		// Cached values.
-		var aSlope = (double)A.Y / A.X;
-		var bSlope = (double)B.Y / B.X;
-		var slopeALessThanB = aSlope < bSlope;
+	private static bool IsWhole(double d)
+	{
+		return Math.Abs(d - Math.Truncate(d)) < double.Epsilon;
+	}
 
-		// Binary search A presses.
-		while (true)
-		{
-			// Shift to B coordinate space to make math easier.
-			var destinationXA = A.X * curAPresses;
-			var destinationYA = A.Y * curAPresses;
-			var targetX = prizeX - destinationXA;
-			var targetY = prizeY - destinationYA;
-
-			// equation for B; y = mx+b; y = (B.Y/B.X)x
-			var bYAtTargetX = targetX * bSlope;
-
-			var curBPresses = Math.Min(targetX / B.X, targetY / B.Y);
-			var destinationX = destinationXA + B.X * curBPresses;
-			var destinationY = destinationYA + B.Y * curBPresses;
-
-			// Check if we won.
-			if (destinationX == prizeX && destinationY == prizeY)
-				return A.Cost * curAPresses + B.Cost * curBPresses;
-
-			// Advance A based on if we overshot in Y or not.
-			var over = bYAtTargetX > targetY;
-			var increaseA = (over && slopeALessThanB) || (!over && !slopeALessThanB);
-			if (increaseA)
-			{
-				minAPresses = curAPresses;
-				var newAPresses = minAPresses + (maxAPresses - minAPresses) / 2;
-				if (curAPresses >= newAPresses)
-					break;
-				curAPresses = newAPresses;
-			}
-			else
-			{
-				maxAPresses = curAPresses;
-				var newAPresses = minAPresses + (maxAPresses - minAPresses) / 2;
-				if (curAPresses <= newAPresses)
-					break;
-				curAPresses = newAPresses;
-			}
-		}
-
+	private long GetCostToWin(long prizeX, long prizeY)
+	{
+		var (ix, iy) = Intersection(0, 0, A.X, A.Y, prizeX - B.X, prizeY - B.Y, prizeX, prizeY);
+		if (IsWhole((double)ix / A.X) && IsWhole((double)(prizeX - ix) / B.X))
+			return A.Cost * (ix / A.X) + B.Cost * ((prizeX - ix) / B.X);
 		return 0;
 	}
 }
