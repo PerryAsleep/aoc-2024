@@ -33,6 +33,7 @@
 
 	private List<Tuple<int, int>> Coords = new();
 	private Node[,] Grid = new Node[W, H];
+	private bool[,] Path = new bool[W, H];
 
 	public void Run()
 	{
@@ -45,11 +46,15 @@
 	{
 		for (var i = 0; i < Coords.Count; i++)
 		{
-			RemoveNode(Coords[i].Item1, Coords[i].Item2);
-			var path = FindShortestPath(Grid[0, 0], Grid[W - 1, H - 1]);
-			if (path == int.MaxValue)
+			var x = Coords[i].Item1;
+			var y = Coords[i].Item2;
+			RemoveNode(x, y);
+			if (i > 0 && !Path[x, y])
+				continue;
+			var len = FindShortestPath(Grid[0, 0], Grid[W - 1, H - 1]);
+			if (len == int.MaxValue)
 			{
-				Console.WriteLine($"{Coords[i].Item1},{Coords[i].Item2}");
+				Console.WriteLine($"{x},{y}");
 				break;
 			}
 		}
@@ -112,6 +117,7 @@
 		var openSet = new HashSet<Node>() { fromNode };
 		var g = new Dictionary<Node, int> { { fromNode, 0 } };
 		var f = new Dictionary<Node, int> { { fromNode, AdmissibleCost(fromNode, toNode) } };
+		var bestPathIntoNode = new Dictionary<Node, Node>();
 
 		while (openSet.Count > 0)
 		{
@@ -127,7 +133,10 @@
 			}
 
 			if (current == toNode)
+			{
+				RecordPath(bestPathIntoNode, current);
 				return g[toNode];
+			}
 
 			openSet.Remove(current);
 			foreach (var edge in current.Edges)
@@ -139,6 +148,7 @@
 				var t = g[current] + edge.Item1;
 				if (t < neighborG)
 				{
+					bestPathIntoNode[edge.Item2] = current;
 					g[edge.Item2] = t;
 					f[edge.Item2] = t + AdmissibleCost(edge.Item2, toNode);
 					openSet.Add(edge.Item2);
@@ -147,6 +157,24 @@
 		}
 
 		return int.MaxValue;
+	}
+
+	private void RecordPath(Dictionary<Node, Node> bestPathIntoNode, Node destination)
+	{
+		for (var x = 0; x < W; x++)
+		{
+			for (var y = 0; y < H; y++)
+			{
+				Path[x, y] = false;
+			}
+		}
+		var n = destination;
+		while (n != null)
+		{
+			Path[n.X, n.Y] = true;
+			if (!bestPathIntoNode.TryGetValue(n, out n))
+				break;
+		}
 	}
 
 	private int AdmissibleCost(Node fromNode, Node toNode)
