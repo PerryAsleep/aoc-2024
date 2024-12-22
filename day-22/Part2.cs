@@ -6,8 +6,7 @@
 	private List<uint> BuyerInitialValues = new();
 	private List<List<int>> BuyerSequences = new();
 	private List<List<int?>> BuyerDeltas = new();
-	private List<int[]> PossibleSequences = new();
-	private HashSet<int> HashedSequences = new();
+	private Dictionary<int, int> HashedCounts = new();
 
 	public void Run()
 	{
@@ -36,10 +35,12 @@
 
 	private void GenerateSecretsAndDeltas(uint start, int iterations, List<int> sequence, List<int?> deltas)
 	{
+		HashSet<int> hashesThisSequence = new HashSet<int>();
 		var num = start;
 		for (var i = 0; i < iterations; i++)
 		{
-			sequence.Add((int)num % 10);
+			var bananas = (int)num % 10;
+			sequence.Add(bananas);
 			if (i == 0)
 				deltas.Add(null);
 			else
@@ -48,11 +49,11 @@
 			if (i >= 5)
 			{
 				var hash = HashCode.Combine(deltas[i], deltas[i - 1], deltas[i - 2], deltas[i - 3]);
-				if (!HashedSequences.Contains(hash))
+				HashedCounts.TryAdd(hash, 0);
+				if (!hashesThisSequence.Contains(hash))
 				{
-					PossibleSequences.Add(new int[4]
-						{ (int)deltas[i - 3], (int)deltas[i - 2], (int)deltas[i - 1], (int)deltas[i] });
-					HashedSequences.Add(hash);
+					hashesThisSequence.Add(hash);
+					HashedCounts[hash] += bananas;
 				}
 			}
 
@@ -68,47 +69,11 @@
 		return num;
 	}
 
-	private long GetMostBananas()
+	private int GetMostBananas()
 	{
-		var mostBananas = long.MinValue;
-		foreach (var sequence in PossibleSequences)
-		{
-			var numBananas = GetNumBananas(sequence);
-			if (numBananas > mostBananas)
-			{
-				mostBananas = numBananas;
-			}
-		}
+		var mostBananas = int.MinValue;
+		foreach (var kvp in HashedCounts)
+			mostBananas = Math.Max(mostBananas, kvp.Value);
 		return mostBananas;
-	}
-
-	private long GetNumBananas(int[] sequence)
-	{
-		var numBananas = 0L;
-		var numDeltasInSequence = sequence.Length;
-		for (var buyerIndex = 0; buyerIndex < BuyerDeltas.Count; buyerIndex++)
-		{
-			var deltas = BuyerDeltas[buyerIndex];
-			for (var deltaIndex = 1; deltaIndex < deltas.Count; deltaIndex++)
-			{
-				var match = true;
-				for (var d = 0; d < numDeltasInSequence; d++)
-				{
-					if (deltaIndex + d >= deltas.Count || deltas[deltaIndex + d] != sequence[d])
-					{
-						match = false;
-						break;
-					}
-				}
-
-				if (match)
-				{
-					numBananas += BuyerSequences[buyerIndex][deltaIndex + numDeltasInSequence - 1];
-					break;
-				}
-			}
-		}
-
-		return numBananas;
 	}
 }
